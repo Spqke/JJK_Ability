@@ -1,5 +1,5 @@
 package me.pezzo.abilityPlugin.enums;
 
 public enum AbilityType {
-    BOMBER, DASH, BLACKHOLE
+    BOMBER, DASH, BLACKHOLE, LEECHFIELD
 }

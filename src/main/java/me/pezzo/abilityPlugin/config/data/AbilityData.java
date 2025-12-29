@@ -3,7 +3,7 @@ package me.pezzo.abilityPlugin.config.data;
 import org.bukkit.Material;
 
 public abstract class AbilityData {
-    protected static String name;
+    protected String name;
     protected String lore;
     protected Material item;
     protected long cooldown;
@@ -16,7 +16,7 @@ public abstract class AbilityData {
     }
 
     // Getters
-    public static String getName() { return name; }
+    public String getName() { return name; }
     public String getLore() { return lore; }
     public Material getItem() { return item; }
     public long getCooldown() { return cooldown; }
