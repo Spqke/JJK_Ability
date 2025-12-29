@@ -32,11 +32,8 @@ public record AbilityListener(AbilityPlugin plugin) implements Listener {
             if (dashData != null && dashData.getName() != null) {
                 String dashName = ChatColor.translateAlternateColorCodes('&', dashData.getName());
                 if (name.equals(dashName)) {
-                    if (plugin.getChargingManager().isCharging(player)) {
-                        plugin.getChargingManager().releaseCharging(player);
-                    } else {
-                        plugin.getChargingManager().startCharging(player, dashName);
-                    }
+                    // Non fare più toggle: avvia solo la charge.
+                    plugin.getChargingManager().startCharging(player, dashName);
                     event.setCancelled(true);
                     return;
                 }

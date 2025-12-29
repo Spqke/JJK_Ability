@@ -173,7 +173,8 @@ public class AbilityConfig {
         config.set("lore", "&fAbilita per scattare in avanti");
         config.set("item", "FEATHER");
         config.set("boost", 4.0);
-        config.set("cooldown", 4000);
+        // Imposto il cooldown di default a 60 secondi (60000 ms) come richiesto
+        config.set("cooldown", 60000);
         try { config.save(file); } catch (IOException e) { plugin.getLogger().severe("Impossibile creare il file dash.yml: " + e.getMessage()); }
     }
 

@@ -6,8 +6,10 @@ import net.md_5.bungee.api.ChatMessageType;
 import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.Particle.DustOptions;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 import java.util.UUID;
@@ -19,15 +21,20 @@ public class ChargingManager {
     private final Map<UUID, ChargingState> charging = new ConcurrentHashMap<>();
     private static final long MAX_CHARGE_MS = 8000L;
     private static final int MIN_TICKS_BEFORE_RELEASE = 6;
+    private static final int MISS_THRESHOLD = 4; // tick di tolleranza per false positives
+    private static final long MIN_HOLD_MS = 200L; // se il giocatore ha tenuto meno di questa soglia, non eseguire il dash
 
     private static final class ChargingState {
         final long startTime;
         final String itemDisplayName;
+        final Material itemType;
         final BukkitRunnable task;
+        int missCount = 0;
 
-        ChargingState(long startTime, String itemDisplayName, BukkitRunnable task) {
+        ChargingState(long startTime, String itemDisplayName, Material itemType, BukkitRunnable task) {
             this.startTime = startTime;
             this.itemDisplayName = itemDisplayName;
+            this.itemType = itemType;
             this.task = task;
         }
     }
@@ -44,6 +51,12 @@ public class ChargingManager {
 
         plugin.getLogger().info("[Charging] start for " + player.getName() + " item='" + itemDisplayName + "'");
 
+        final Material startType;
+        ItemStack startItem = player.getInventory().getItemInMainHand();
+        startType = (startItem == null) ? Material.AIR : startItem.getType();
+
+        final ChargingState[] stateRef = new ChargingState[1];
+
         BukkitRunnable task = new BukkitRunnable() {
             int ticks = 0;
 
@@ -56,15 +69,11 @@ public class ChargingManager {
                     return;
                 }
 
-                boolean sameItem = player.getInventory().getItemInMainHand() != null
-                        && player.getInventory().getItemInMainHand().hasItemMeta()
-                        && player.getInventory().getItemInMainHand().getItemMeta().hasDisplayName()
-                        && player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().equals(itemDisplayName);
-
-                Boolean handRaised = null;
-                try {
-                    handRaised = player.isHandRaised();
-                } catch (Throwable ignored) {
+                ItemStack current = player.getInventory().getItemInMainHand();
+                boolean sameItem = false;
+                if (current != null && current.getType() == startType && current.hasItemMeta() && current.getItemMeta().hasDisplayName()) {
+                    String curName = current.getItemMeta().getDisplayName();
+                    sameItem = itemDisplayName != null && itemDisplayName.equals(curName);
                 }
 
                 long now = System.currentTimeMillis();
@@ -73,7 +82,8 @@ public class ChargingManager {
                 double ratio = (double) capped / (double) MAX_CHARGE_MS;
                 int percent = (int) Math.round(ratio * 100.0);
 
-                String bar = "§bDash Charge §f" + percent + "%";
+                // Action bar in tempo reale con formato "Dash: X%"
+                String bar = "§bDash: §f" + percent + "%";
                 try {
                     player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(bar));
                 } catch (Throwable ignored) {
@@ -104,14 +114,21 @@ public class ChargingManager {
                     return;
                 }
 
-                boolean stillUsing = (handRaised != null) ? handRaised : sameItem;
+                ChargingState st = stateRef[0];
+                if (st == null) return;
 
-                if (!stillUsing || !sameItem) {
+                if (!sameItem) {
+                    st.missCount++;
+                } else {
+                    st.missCount = 0;
+                }
+
+                // solo se il mismatch persiste per MISS_THRESHOLD tick consecutivi -> release
+                if (st.missCount >= MISS_THRESHOLD) {
                     plugin.getLogger().info(String.format(
-                            "[Charging] stop for %s: handRaised=%s sameItem=%s ticks=%d percent=%d",
+                            "[Charging] stop for %s: consecutive misses=%d ticks=%d percent=%d",
                             player.getName(),
-                            handRaised == null ? "N/A" : handRaised.toString(),
-                            sameItem,
+                            st.missCount,
                             ticks,
                             percent
                     ));
@@ -120,8 +137,10 @@ public class ChargingManager {
             }
         };
 
+        ChargingState s = new ChargingState(start, itemDisplayName, startType, task);
+        stateRef[0] = s;
         task.runTaskTimer(plugin, 1L, 1L);
-        charging.put(id, new ChargingState(start, itemDisplayName, task));
+        charging.put(id, s);
     }
 
     public void cancelCharging(Player player) {
@@ -157,6 +176,18 @@ public class ChargingManager {
 
             long now = System.currentTimeMillis();
             long elapsed = Math.max(0, now - s.startTime);
+
+            // se il giocatore ha tenuto premuto meno di MIN_HOLD_MS, non eseguire il dash
+            if (elapsed < MIN_HOLD_MS) {
+                plugin.getLogger().info(String.format(
+                        "[Charging] release ignored for %s after %dms (below min hold %dms)",
+                        player.getName(),
+                        elapsed,
+                        MIN_HOLD_MS
+                ));
+                return;
+            }
+
             double ratio = Math.min(1.0, (double) elapsed / (double) MAX_CHARGE_MS);
 
             plugin.getLogger().info(String.format(
