@@ -25,7 +25,7 @@ public record AbilityCommand(AbilityPlugin plugin) {
     public void info(CommandSender sender) {
         sender.sendMessage("========================================");
         sender.sendMessage("Authors: TempBanned");
-        sender.sendMessage("Ability: Dash, BlackHole");
+        sender.sendMessage("Ability: Dash, BlackHoles");
         sender.sendMessage("Last Update: 29/12/2025");
         sender.sendMessage("========================================");
     }
