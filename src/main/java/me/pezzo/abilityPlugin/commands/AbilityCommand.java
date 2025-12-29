@@ -24,7 +24,7 @@ public record AbilityCommand(AbilityPlugin plugin) {
     @CommandPermission("tability.command.info")
     public void info(CommandSender sender) {
         sender.sendMessage("========================================");
-        sender.sendMessage("Authors: TempBanned");
+        sender.sendMessage("Authors: TempBanneds");
         sender.sendMessage("Ability: Dash, BlackHoles");
         sender.sendMessage("Last Update: 29/12/2025");
         sender.sendMessage("========================================");
