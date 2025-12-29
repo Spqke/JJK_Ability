@@ -16,9 +16,9 @@ import revxrsal.commands.annotation.Subcommand;
 import revxrsal.commands.bukkit.annotation.CommandPermission;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Command("tability")
 @CommandPermission("tability.command.use")
@@ -27,9 +27,10 @@ public record AbilityCommand(AbilityPlugin plugin) {
     @Subcommand("info")
     @CommandPermission("tability.command.info")
     public void info(CommandSender sender) {
+        LanguageConfig lang = plugin.getLanguageConfig();
         sender.sendMessage("========================================");
-        sender.sendMessage("Authors: TempBanneds");
-        sender.sendMessage("Ability: Dash, BlackHoles");
+        sender.sendMessage(lang.getString("ability.info.authors", "Authors: TempBanneds"));
+        sender.sendMessage(lang.getString("ability.info.list", "Abilities incluse: Dash, Blackhole, BluHollow, LeechField"));
         sender.sendMessage("Last Update: 29/12/2025");
         sender.sendMessage("========================================");
     }
@@ -47,6 +48,7 @@ public record AbilityCommand(AbilityPlugin plugin) {
         ItemStack item = new ItemStack(data.getItem());
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
+            // display name already stored in AbilityData (now sourced from lang.yml when available)
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', data.getName()));
             List<String> lore = new ArrayList<>();
             lore.add(ChatColor.translateAlternateColorCodes('&', data.getLore()));
@@ -69,9 +71,9 @@ public record AbilityCommand(AbilityPlugin plugin) {
 
             sender.sendMessage(langCfg.format("reload.started", null));
 
-            // ricarica abilità e lang
-            ReloadResult abilityResult = cfg.reload();
+            // ricarica lang PRIMA delle abilità così le abilità che usano nomi da lang verranno aggiornate
             LanguageConfig.ReloadResult langResult = langCfg.reload();
+            ReloadResult abilityResult = cfg.reload();
 
             sender.sendMessage(langCfg.format("reload.completed", null));
 
@@ -93,7 +95,7 @@ public record AbilityCommand(AbilityPlugin plugin) {
             }
             if (!abilityResult.modified.isEmpty()) {
                 sender.sendMessage(langCfg.format("reload.modified", Map.of("files", String.join(", ", abilityResult.modified))));
-                for (Map.Entry<String, List<String>> e : abilityResult.modifiedDetails.entrySet()) {
+                for (Entry<String, List<String>> e : abilityResult.modifiedDetails.entrySet()) {
                     sender.sendMessage(langCfg.format("reload.detail.header", Map.of("file", e.getKey() + ".yml")));
                     List<String> diffs = e.getValue();
                     if (diffs.isEmpty()) {
@@ -113,7 +115,7 @@ public record AbilityCommand(AbilityPlugin plugin) {
             }
             if (!langResult.modified.isEmpty()) {
                 sender.sendMessage("§eLang keys modificate: " + String.join(", ", langResult.modified));
-                for (Map.Entry<String, String[]> e : langResult.modifiedDetails.entrySet()) {
+                for (Entry<String, String[]> e : langResult.modifiedDetails.entrySet()) {
                     String key = e.getKey();
                     String oldV = e.getValue()[0];
                     String newV = e.getValue()[1];
@@ -121,7 +123,10 @@ public record AbilityCommand(AbilityPlugin plugin) {
                 }
             }
 
-            plugin.getLogger().info((sender instanceof Player ? ((Player) sender).getName() : "Console") + " ha ricaricato le abilità e lang. Changes: abilities added=" + abilityResult.added.size() + " removed=" + abilityResult.removed.size() + " modified=" + abilityResult.modified.size() + " | lang added=" + langResult.added.size() + " removed=" + langResult.removed.size() + " modified=" + langResult.modified.size());
+            String who = (sender instanceof Player ? ((Player) sender).getName() : "Console");
+            plugin.getLogger().info(who + " ha ricaricato le abilità e lang. Changes: abilities added=" + abilityResult.added.size()
+                    + " removed=" + abilityResult.removed.size() + " modified=" + abilityResult.modified.size()
+                    + " | lang added=" + langResult.added.size() + " removed=" + langResult.removed.size() + " modified=" + langResult.modified.size());
         } catch (Exception e) {
             String msg = plugin.getLanguageConfig().format("error.reload", Map.of("error", e.getMessage()));
             sender.sendMessage(msg);

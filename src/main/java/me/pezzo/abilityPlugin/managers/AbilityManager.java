@@ -60,7 +60,12 @@ public class AbilityManager {
             return;
         }
 
-        player.sendMessage(org.bukkit.ChatColor.DARK_RED + "" + org.bukkit.ChatColor.BOLD + "Reversal");
+        // Legge i messaggi di fase dal lang.yml (fallback ai valori hard-coded se mancanti)
+        String p0 = plugin.getLanguageConfig().getString("ability.blackhole.phase.0", org.bukkit.ChatColor.DARK_RED + "" + org.bukkit.ChatColor.BOLD + "Reversal");
+        String p1 = plugin.getLanguageConfig().getString("ability.blackhole.phase.1", org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.BOLD + "Divergence");
+        String p2 = plugin.getLanguageConfig().getString("ability.blackhole.phase.2", org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Positive Energy");
+
+        player.sendMessage(p0);
         new BukkitRunnable() {
             int step = 0;
             @Override
@@ -70,9 +75,9 @@ public class AbilityManager {
                     return;
                 }
                 if (step == 1) {
-                    player.sendMessage(org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.BOLD + "Divergence");
+                    player.sendMessage(p1);
                 } else if (step == 2) {
-                    player.sendMessage(org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Positive Energy");
+                    player.sendMessage(p2);
                 } else if (step >= 3) {
                     Location target;
                     try {
@@ -105,7 +110,12 @@ public class AbilityManager {
             return;
         }
 
-        player.sendMessage(org.bukkit.ChatColor.BLUE + "" + org.bukkit.ChatColor.BOLD + "Limitless");
+        // Legge i messaggi di fase dal lang.yml (fallback ai valori hard-coded se mancanti)
+        String b0 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.0", org.bukkit.ChatColor.BLUE + "" + org.bukkit.ChatColor.BOLD + "Limitless");
+        String b1 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.1", org.bukkit.ChatColor.AQUA + "" + org.bukkit.ChatColor.BOLD + "Convergence");
+        String b2 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.2", org.bukkit.ChatColor.DARK_AQUA + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Negative Energy");
+
+        player.sendMessage(b0);
         new BukkitRunnable() {
             int step = 0;
             @Override
@@ -115,9 +125,9 @@ public class AbilityManager {
                     return;
                 }
                 if (step == 1) {
-                    player.sendMessage(org.bukkit.ChatColor.AQUA + "" + org.bukkit.ChatColor.BOLD + "Convergence");
+                    player.sendMessage(b1);
                 } else if (step == 2) {
-                    player.sendMessage(org.bukkit.ChatColor.DARK_AQUA + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Negative Energy");
+                    player.sendMessage(b2);
                 } else if (step >= 3) {
                     Location start;
                     try {

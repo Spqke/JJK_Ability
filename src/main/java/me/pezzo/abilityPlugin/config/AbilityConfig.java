@@ -84,10 +84,24 @@ public class AbilityConfig {
             rawConfigs.put(key, cfg);
             fileHashes.put(key, computeHash(f));
             try {
+                // Preferiamo leggere il nome dall'lang (ability.name.<key>) se presente,
+                // altrimenti prendiamo il valore in cfg (o il default hard-coded).
+                String langNameKey = "ability.name." + key;
+                String defaultName = cfg.getString("name", switch (key) {
+                    case "dash" -> "&4Dash";
+                    case "blackhole" -> "&4Bagliore Rosso";
+                    case "leechfield" -> "&2Leech Field";
+                    case "bluhollow" -> "&9Bagliore Blu";
+                    default -> "&7Ability";
+                });
+                String name = plugin.getLanguageConfig() != null
+                        ? plugin.getLanguageConfig().getString(langNameKey, defaultName)
+                        : defaultName;
+
                 switch (key) {
                     case "dash" -> {
                         DashData dashData = new DashData(
-                                cfg.getString("name", "&4Dash"),
+                                name,
                                 cfg.getString("lore", "&fAbilita per scattare in avanti"),
                                 parseMaterial(cfg.getString("item", "FEATHER"), Material.FEATHER),
                                 cfg.getDouble("boost", 2.0),
@@ -97,7 +111,7 @@ public class AbilityConfig {
                     }
                     case "blackhole" -> {
                         BlackholeData blackholeData = new BlackholeData(
-                                cfg.getString("name", "&4Bagliore Rosso"),
+                                name,
                                 cfg.getString("lore", "&cBagliore rosso. Attira e danneggia i nemici."),
                                 parseMaterial(cfg.getString("item", "RED_DYE"), Material.RED_DYE),
                                 cfg.getDouble("damage", 4.0),
@@ -108,7 +122,7 @@ public class AbilityConfig {
                     }
                     case "leechfield" -> {
                         LeechFieldData leechData = new LeechFieldData(
-                                cfg.getString("name", "&2Leech Field"),
+                                name,
                                 cfg.getString("lore", "&7Sottrai vita ai nemici e rigenerati"),
                                 parseMaterial(cfg.getString("item", "SPIDER_EYE"), Material.SPIDER_EYE),
                                 cfg.getDouble("radius", 6.0),
@@ -123,7 +137,7 @@ public class AbilityConfig {
                     }
                     case "bluhollow" -> {
                         BluHollowData blu = new BluHollowData(
-                                cfg.getString("name", "&9Bagliore Blu"),
+                                name,
                                 cfg.getString("lore", "&bBagliore blu. Una palla distruttiva che avanza dove guardi."),
                                 parseMaterial(cfg.getString("item", "BLUE_DYE"), Material.BLUE_DYE),
                                 cfg.getDouble("damage", 8.0),
