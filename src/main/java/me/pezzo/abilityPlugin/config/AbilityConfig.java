@@ -131,6 +131,7 @@ public class AbilityConfig {
                                 cfg.getDouble("speed", 0.8),
                                 cfg.getInt("duration_ticks", 120),
                                 cfg.getBoolean("destroy_blocks", true),
+                                cfg.getDouble("anchor_distance", 7.0), // nuovo parametro configurabile
                                 cfg.getLong("cooldown", 240000)
                         );
                         abilities.put(key, blu);
@@ -203,6 +204,7 @@ public class AbilityConfig {
         config.set("speed", 0.8);
         config.set("duration_ticks", 120);
         config.set("destroy_blocks", true);
+        config.set("anchor_distance", 7.0); // default aggiunto
         config.set("cooldown", 240000);
         try { config.save(file); } catch (IOException e) { plugin.getLogger().severe("Impossibile creare il file bluhollow.yml: " + e.getMessage()); }
     }

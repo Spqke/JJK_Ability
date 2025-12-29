@@ -126,7 +126,7 @@ public class AbilityManager {
                         start = player.getLocation().add(player.getLocation().getDirection().normalize().multiply(1.5));
                     }
                     Vector dir = player.getLocation().getDirection().normalize();
-                    new BluHollowEffect(player, start, dir, blu.getDamage(), blu.getRadius(), blu.getSpeed(), blu.getDurationTicks(), blu.isDestroyBlocks()).start();
+                    new BluHollowEffect(player, start, dir, blu.getDamage(), blu.getRadius(), blu.getSpeed(), blu.getDurationTicks(), blu.isDestroyBlocks(), blu.getAnchorDistance()).start();
                     cancel();
                     return;
                 }

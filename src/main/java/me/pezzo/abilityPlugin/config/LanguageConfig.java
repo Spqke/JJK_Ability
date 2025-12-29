@@ -52,16 +52,39 @@ public class LanguageConfig {
         cfg.set("reload.detail.header", "&6Dettagli per: {file}");
         cfg.set("reload.detail.none", "&7(modificato ma nessun cambiamento top-level rilevato)");
 
-        // Ability messages
+        // Ability messages - nomi e messaggi di uso
+        cfg.set("ability.name.dash", "&4Dash");
+        cfg.set("ability.name.blackhole", "&4Bagliore Rosso");
+        cfg.set("ability.name.bluhollow", "&9Bagliore Blu");
+        cfg.set("ability.name.leechfield", "&2Leech Field");
+
         cfg.set("ability.not_found", "&cConfigurazione per l'abilità {ability} non trovata!");
         cfg.set("ability.given", "&aHai dato {ability} a {player}");
         cfg.set("ability.used_dash", "&bHai usato il Dash!");
         cfg.set("ability.used_blackhole", "&5Hai creato un Blackhole!");
+        cfg.set("ability.used_bluhollow", "&9Hai creato un Blu Hollow!");
+        cfg.set("ability.used_leech", "&2Hai creato un Leech Field!");
         cfg.set("ability.cooldown", "&c{ability} in cooldown: {seconds}s");
         cfg.set("ability.load_error", "&cErrore caricamento configurazione per {ability}: {error}");
 
+        // Blackhole / Red glow specific phases (usati per countdown/annunci)
+        cfg.set("ability.blackhole.phase.0", "&4Reversal");
+        cfg.set("ability.blackhole.phase.1", "&cDivergence");
+        cfg.set("ability.blackhole.phase.2", "&c&oPositive Energy");
+
+        // BluHollow specific phases
+        cfg.set("ability.bluhollow.phase.0", "&9Limitless");
+        cfg.set("ability.bluhollow.phase.1", "&bConvergence");
+        cfg.set("ability.bluhollow.phase.2", "&3&oNegative Energy");
+
+        // Messaggi vari utili
+        cfg.set("ability.give.usage", "&eUso: /tability give <player> <ability>");
+        cfg.set("ability.info.authors", "&7Authors: TempBanneds");
+        cfg.set("ability.info.list", "&7Abilities incluse: Dash, Blackhole, BluHollow, LeechField");
+
         // Errors
         cfg.set("error.reload", "&cErrore durante il reload: {error}");
+        cfg.set("error.no_permission", "&cNon hai il permesso per eseguire questo comando.");
 
         try {
             cfg.save(langFile);
