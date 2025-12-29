@@ -46,6 +46,33 @@ public class AbilityManager {
         new DashEffect(player, dashData.getBoost()).start();
     }
 
+    /**
+     * Esegue il dash tenendo conto del chargeRatio [0..1].
+     */
+    public void executeChargedDash(Player player, double chargeRatio) {
+        UUID id = player.getUniqueId();
+        DashData dashData = abilityConfig.getDashData();
+        if (dashData == null) {
+            player.sendMessage(plugin.getLanguageConfig().format("ability.load_error", java.util.Map.of("ability", "dash", "error", "missing")));
+            return;
+        }
+        if (!cooldownManager.tryUse(id, "dash", dashData.getCooldown())) {
+            long remain = cooldownManager.getRemainingMillis(id, "dash");
+            double seconds = Math.ceil(remain / 100.0) / 10.0;
+            player.sendMessage(plugin.getLanguageConfig().format("ability.cooldown", java.util.Map.of("ability", "Dash", "seconds", String.valueOf(seconds))));
+            return;
+        }
+
+        // Messaggio personalizzato (puoi modificare language keys se vuoi)
+        player.sendMessage(plugin.getLanguageConfig().getString("ability.used_dash", "&bHai usato il Dash!"));
+
+        // Calcula multiplier influenzato dal charge (es: boost * (1 + charge*2))
+        double boost = dashData.getBoost() * (1.0 + chargeRatio * 2.0);
+
+        // Avvia effetto (col chargeRatio per particelle più forti)
+        new DashEffect(player, boost, chargeRatio).start();
+    }
+
     public void executeBlackhole(Player player) {
         UUID id = player.getUniqueId();
         BlackholeData blackholeData = abilityConfig.getBlackholeData();
@@ -113,7 +140,7 @@ public class AbilityManager {
         // Legge i messaggi di fase dal lang.yml (fallback ai valori hard-coded se mancanti)
         String b0 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.0", org.bukkit.ChatColor.BLUE + "" + org.bukkit.ChatColor.BOLD + "Limitless");
         String b1 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.1", org.bukkit.ChatColor.AQUA + "" + org.bukkit.ChatColor.BOLD + "Convergence");
-        String b2 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.2", org.bukkit.ChatColor.DARK_AQUA + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Negative Energy");
+        String b2 = plugin.getLanguageConfig().getString("ability.bluhollow.phase.2", org.bukkit.ChatColor.DARK_AQUA + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Negative Ene[...]");
 
         player.sendMessage(b0);
         new BukkitRunnable() {

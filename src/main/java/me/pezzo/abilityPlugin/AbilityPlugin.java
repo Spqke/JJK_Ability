@@ -5,6 +5,7 @@ import me.pezzo.abilityPlugin.config.AbilityConfig;
 import me.pezzo.abilityPlugin.config.LanguageConfig;
 import me.pezzo.abilityPlugin.listener.AbilityListener;
 import me.pezzo.abilityPlugin.managers.AbilityManager;
+import me.pezzo.abilityPlugin.managers.ChargingManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
 
@@ -15,6 +16,7 @@ public final class AbilityPlugin extends JavaPlugin {
     private AbilityManager abilityManager;
     private AbilityConfig abilityConfig;
     private LanguageConfig languageConfig;
+    private ChargingManager chargingManager;
 
     @Override
     public void onEnable() {
@@ -26,6 +28,9 @@ public final class AbilityPlugin extends JavaPlugin {
         // Creare il config prima del manager
         abilityConfig = new AbilityConfig(this);
         abilityManager = new AbilityManager(this, abilityConfig);
+
+        // Charging manager (per Dash)
+        chargingManager = new ChargingManager(this);
 
         registerCommands();
         registerListeners();
@@ -44,6 +49,7 @@ public final class AbilityPlugin extends JavaPlugin {
         abilityManager = null;
         abilityConfig = null;
         languageConfig = null;
+        chargingManager = null;
         commandHandler = null;
     }
 
@@ -61,6 +67,10 @@ public final class AbilityPlugin extends JavaPlugin {
 
     public LanguageConfig getLanguageConfig() {
         return languageConfig;
+    }
+
+    public ChargingManager getChargingManager() {
+        return chargingManager;
     }
 
     private void registerCommands() {
