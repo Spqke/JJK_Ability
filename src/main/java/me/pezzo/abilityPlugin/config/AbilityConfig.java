@@ -84,8 +84,6 @@ public class AbilityConfig {
             rawConfigs.put(key, cfg);
             fileHashes.put(key, computeHash(f));
             try {
-                // Preferiamo leggere il nome dall'lang (ability.name.<key>) se presente,
-                // altrimenti prendiamo il valore in cfg (o il default hard-coded).
                 String langNameKey = "ability.name." + key;
                 String defaultName = cfg.getString("name", switch (key) {
                     case "dash" -> "&4Dash";

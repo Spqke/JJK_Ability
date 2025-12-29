@@ -15,21 +15,10 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-/**
- * Enhanced BlackholeEffect:
- * - visualCenter separato dal centro di attrazione (le entità vengono attratte dal centro originale,
- *   mentre la parte visiva del "buco nero" è sollevata)
- * - core visivo multilayer (vetri neri/grigi, concrete scure, polished blackstone) che swirlano
- * - floating blocks distribuiti nella cupola (come prima)
- * - nessuna particella (rimosse per richiesta)
- * - suoni ambient leggeri rimangono
- *
- * Tutti i blocchi temporanei vengono ripristinati al termine.
- */
 public class BlackholeEffect {
 
     private final Player owner;
-    private final Location center;        // centro LOGICO (attrazione / danno)
+    private final Location center;
     private final double damageValue;
     private final double rangeValue;
 
@@ -37,13 +26,11 @@ public class BlackholeEffect {
     private static final int DAMAGE_INTERVAL_TICKS = 40;
     private static final double MAX_PULL = 3.5;
 
-    // materiali visivi generali
     private final Material shellMaterial = Material.BLACK_STAINED_GLASS;
     private final Material shellAccentMaterial = Material.RED_STAINED_GLASS;
     private final Material armMaterial = Material.POLISHED_BLACKSTONE;
     private final Material armAccentMaterial = Material.RED_CONCRETE;
 
-    // Track dei blocchi modificati per restore
     private final Map<BlockKey, BlockSnapshot> modifiedBlocks = new HashMap<>();
     private final Set<BlockKey> currentShellBlocks = new HashSet<>();
     private final Set<BlockKey> currentArmBlocks = new HashSet<>();
@@ -87,9 +74,8 @@ public class BlackholeEffect {
     }
 
     public void start() {
-        // visual offset factor: quanto sopra il center vogliamo posizionare il buco nero visivo
-        final double visualOffsetFactor = Math.min(0.7, 0.9); // fattore moltiplicato per rangeValue (puoi regolare)
-        final double visualOffset = Math.min(4.5, Math.max(1.8, rangeValue * 0.45)); // valore effettivo in blocchi
+        final double visualOffsetFactor = Math.min(0.7, 0.9);
+        final double visualOffset = Math.min(4.5, Math.max(1.8, rangeValue * 0.45));
 
         center.getWorld().playSound(center, Sound.ENTITY_WITHER_SPAWN, 1f, 0.7f);
 
@@ -112,25 +98,19 @@ public class BlackholeEffect {
                     return;
                 }
 
-                // calcoliamo il centro visivo sollevato (puoi modificare visualOffset calcolato sopra)
                 Location visualCenter = center.clone().add(0.0, visualOffset, 0.0);
 
-                // suoni ambient sul centro visivo
                 maybePlayAmbientSounds(tick, rnd, visualCenter);
 
-                // Shell visiva (sfera) attorno al centro visivo
                 Set<BlockKey> newShell = computeHollowSphereKeys(visualCenter, rangeValue, 0.6);
                 updateTemporaryBlocksWithAccent(currentShellBlocks, newShell, shellMaterial, shellAccentMaterial, 0.12, rnd);
 
-                // Bracci rotanti attorno al centro visivo
                 Set<BlockKey> newArms = computeRotatingArmsKeys(visualCenter, rangeValue, tick);
                 updateTemporaryBlocksWithAccent(currentArmBlocks, newArms, armMaterial, armAccentMaterial, 0.18, rnd);
 
-                // Floating blocks dentro la cupola attorno al centro visivo
                 Set<BlockKey> newFloating = computeFloatingOrbitKeys(visualCenter, rangeValue, tick, rnd);
                 updateTemporaryBlocksWithAccent(currentFloatingBlocks, newFloating, shellMaterial, shellAccentMaterial, 0.5, rnd);
 
-                // Core visivo sollevato: multilayer swirl concentric
                 double coreRadius = Math.max(1.0, Math.min(4.0, rangeValue * 0.32));
                 Set<BlockKey> newCore = computeCoreSwirlKeys(visualCenter, coreRadius, tick, rnd);
                 Material[] corePalette = new Material[] {
@@ -143,7 +123,6 @@ public class BlackholeEffect {
                 };
                 updateTemporaryBlocksWithPalette(currentCoreBlocks, newCore, corePalette, rnd);
 
-                // Pull delle entità: USIAMO il centro LOGICO (non il visualCenter) così entità vengono attratte dal punto "reale"
                 for (Entity e : center.getWorld().getNearbyEntities(center, rangeValue, rangeValue, rangeValue)) {
                     if (e.equals(owner) || e.isDead()) continue;
                     Location eloc = e.getLocation().clone();
@@ -337,10 +316,6 @@ public class BlackholeEffect {
         return out;
     }
 
-    /**
-     * Core swirl: genera più anelli concentrici con rotazione e pulsazione.
-     * Distribuisce blocchi in piccoli cluster vicino al centro visivo per dare densità.
-     */
     private Set<BlockKey> computeCoreSwirlKeys(Location center, double coreRadius, int tick, Random rnd) {
         Set<BlockKey> out = new HashSet<>();
 
@@ -357,9 +332,7 @@ public class BlackholeEffect {
                 double x = Math.cos(baseAngle) * radiusJitter;
                 double z = Math.sin(baseAngle) * radiusJitter;
 
-                // stack verticale con lieve offset per spessore del core
                 double y = (Math.sin(tick * 0.09 + p * 0.21) * 0.18) + (ring - rings/2.0) * 0.14;
-                // jitter per evitare pattern regolari
                 double jx = (rnd.nextDouble() - 0.5) * 0.18;
                 double jz = (rnd.nextDouble() - 0.5) * 0.18;
                 double jy = (rnd.nextDouble() - 0.5) * 0.06;
@@ -367,7 +340,6 @@ public class BlackholeEffect {
                 Location pos = center.clone().add(x + jx, y + jy, z + jz);
                 out.add(new BlockKey(center.getWorld(), pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()));
 
-                // piccoli cluster interni per densità
                 if (rnd.nextDouble() < 0.2) {
                     double smallR = Math.random() * (coreRadius * 0.18);
                     double a2 = baseAngle + (Math.random() - 0.5) * 0.7;
@@ -377,7 +349,6 @@ public class BlackholeEffect {
             }
         }
 
-        // aggiungiamo un piccolo "nocciolo" centrale molto scuro (qualche blocco)
         for (int i = 0; i < Math.max(3, (int)(coreRadius * 3)); i++) {
             double ang = rnd.nextDouble() * Math.PI * 2;
             double r = rnd.nextDouble() * (coreRadius * 0.18);

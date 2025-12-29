@@ -11,18 +11,11 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.*;
 
-/**
- * Gestisce il file lang.yml separato. Fornisce:
- * - caricamento e reload con rilevamento modifiche (added/removed/modified)
- * - formattazione messaggi con placeholder {key}
- * - supporto per '&' come codice colore
- */
 public class LanguageConfig {
 
     private final AbilityPlugin plugin;
     private final File langFile;
     private YamlConfiguration currentConfig;
-    // valori "flattened" key->string value, per confronti affidabili
     private Map<String, String> previousFlat = new HashMap<>();
     private String previousHash;
 
@@ -42,7 +35,6 @@ public class LanguageConfig {
 
     private void createDefaultLang() {
         YamlConfiguration cfg = new YamlConfiguration();
-        // Messages general (usare & per colori)
         cfg.set("reload.started", "&aRicaricamento configurazioni in corso...");
         cfg.set("reload.completed", "&aRicaricamento completato.");
         cfg.set("reload.none", "&7Nessuna modifica rilevata.");
@@ -67,22 +59,18 @@ public class LanguageConfig {
         cfg.set("ability.cooldown", "&c{ability} in cooldown: {seconds}s");
         cfg.set("ability.load_error", "&cErrore caricamento configurazione per {ability}: {error}");
 
-        // Blackhole / Red glow specific phases (usati per countdown/annunci)
         cfg.set("ability.blackhole.phase.0", "&4Reversal");
         cfg.set("ability.blackhole.phase.1", "&cDivergence");
         cfg.set("ability.blackhole.phase.2", "&c&oPositive Energy");
 
-        // BluHollow specific phases
         cfg.set("ability.bluhollow.phase.0", "&9Limitless");
         cfg.set("ability.bluhollow.phase.1", "&bConvergence");
         cfg.set("ability.bluhollow.phase.2", "&3&oNegative Energy");
 
-        // Messaggi vari utili
         cfg.set("ability.give.usage", "&eUso: /tability give <player> <ability>");
         cfg.set("ability.info.authors", "&7Authors: TempBanneds");
         cfg.set("ability.info.list", "&7Abilities incluse: Dash, Blackhole, BluHollow, LeechField");
 
-        // Errors
         cfg.set("error.reload", "&cErrore durante il reload: {error}");
         cfg.set("error.no_permission", "&cNon hai il permesso per eseguire questo comando.");
 
@@ -93,14 +81,8 @@ public class LanguageConfig {
         }
     }
 
-    /**
-     * Format a message by key with placeholders and color codes.
-     * Placeholders format: {name}
-     * Example: format("ability.given", Map.of("ability","Dash","player","Foo"))
-     */
     public String format(String key, Map<String, String> placeholders) {
         if (key == null) return "";
-        // otteniamo raw (non tradotto) per sostituire placeholders, poi traduciamo '&'
         String raw = currentConfig == null ? null : currentConfig.getString(key, null);
         if (raw == null) raw = "<missing:" + key + ">";
         if (placeholders != null) {
@@ -111,9 +93,6 @@ public class LanguageConfig {
         return ChatColor.translateAlternateColorCodes('&', raw);
     }
 
-    /**
-     * Ritorna la string tradotta (& -> colori). Utile quando non servono placeholder.
-     */
     public String getString(String key, String def) {
         if (currentConfig == null) return ChatColor.translateAlternateColorCodes('&', def == null ? "" : def);
         String raw = currentConfig.getString(key, def);
@@ -124,9 +103,6 @@ public class LanguageConfig {
         return currentConfig;
     }
 
-    /**
-     * Reload del lang.yml. Ritorna un ReloadResult con added/removed/modified (tutte le chiavi flattenate)
-     */
     public synchronized ReloadResult reload() {
         if (!langFile.exists()) createDefaultLang();
         YamlConfiguration newCfg = YamlConfiguration.loadConfiguration(langFile);
@@ -163,11 +139,9 @@ public class LanguageConfig {
         return new ReloadResult(added, removed, modified, modifiedDetails);
     }
 
-    // Flatten di tutte le chiavi in dot-notation prendendo solo valori scalari (string)
     private Map<String, String> flatten(YamlConfiguration cfg) {
         Map<String, String> out = new HashMap<>();
         if (cfg == null) return out;
-        // getKeys(true) include tutte le chiavi profonde; per ogni key che NON è section prendiamo getString
         Set<String> keys = cfg.getKeys(true);
         for (String key : keys) {
             if (cfg.isConfigurationSection(key)) continue;
@@ -194,7 +168,7 @@ public class LanguageConfig {
         public final List<String> added;
         public final List<String> removed;
         public final List<String> modified;
-        public final Map<String, String[]> modifiedDetails; // key -> [old, new]
+        public final Map<String, String[]> modifiedDetails;
 
         public ReloadResult(List<String> added, List<String> removed, List<String> modified, Map<String, String[]> modifiedDetails) {
             this.added = Collections.unmodifiableList(new ArrayList<>(added));

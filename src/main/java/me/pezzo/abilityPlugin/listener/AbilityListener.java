@@ -32,8 +32,11 @@ public record AbilityListener(AbilityPlugin plugin) implements Listener {
             if (dashData != null && dashData.getName() != null) {
                 String dashName = ChatColor.translateAlternateColorCodes('&', dashData.getName());
                 if (name.equals(dashName)) {
-                    // Invece di eseguire immediatamente l'effetto, avviamo il caricamento
-                    plugin.getChargingManager().startCharging(player, dashName);
+                    if (plugin.getChargingManager().isCharging(player)) {
+                        plugin.getChargingManager().releaseCharging(player);
+                    } else {
+                        plugin.getChargingManager().startCharging(player, dashName);
+                    }
                     event.setCancelled(true);
                     return;
                 }

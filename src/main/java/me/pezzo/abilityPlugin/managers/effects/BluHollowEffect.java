@@ -17,12 +17,6 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-/**
- * BluHollowEffect: singola sfera visuale semi-trasparente (glass shell) con particelle interne animate.
- * - Quando la sfera tocca blocchi, li distrugge (imposta AIR) e salva lo stato originale per ripristinarli alla fine.
- * - La shell di vetro è visiva e si sposta con la view; non lascia tracce di vetro dietro (viene ripristinata mentre si muove).
- * - Tutte le modifiche vengono ripristinate al termine dell'effetto (o se il giocatore disconnette).
- */
 public class BluHollowEffect {
 
     private final Player owner;
@@ -31,19 +25,16 @@ public class BluHollowEffect {
     private final double radius;
     private final double speed;
     private final int durationTicks;
-    private final boolean destroyBlocks; // se true, i blocchi interni vengono impostati ad AIR (distrutti) fino al restore finale
+    private final boolean destroyBlocks;
     private Vector velocity = new Vector(0, 0, 0);
-    private final double offsetDistance; // distanza fissa dagli occhi del giocatore (la sfera è ancorata alla view)
-    private final Material shellMaterial = Material.BLUE_STAINED_GLASS; // materiale della shell semi-trasparente
+    private final double offsetDistance;
+    private final Material shellMaterial = Material.BLUE_STAINED_GLASS;
 
-    // Blocchi che attualmente formano la shell (da ripristinare quando la shell si sposta)
+
     private final Set<BlockKey> currentShellBlocks = new HashSet<>();
 
-    // Mappa dei blocchi modificati permanentemente (salvati per restore finale).
-    // Contiene sia blocchi "distrutti" (persistenti) che blocchi originali sovrascritti dalla shell la prima volta.
     private final Map<BlockKey, BlockSnapshot> modifiedBlocks = new HashMap<>();
 
-    // Snapshot con flag persistent: se true => blocco distrutto (deve rimanere AIR fino al restore finale)
     private static final class BlockSnapshot {
         final Material material;
         final BlockData data;
@@ -55,7 +46,6 @@ public class BluHollowEffect {
         }
     }
 
-    // chiave immutabile per identificare blocchi nelle mappe (evita problemi con Location mutabile)
     private static final class BlockKey {
         final UUID world;
         final int x, y, z;
@@ -112,8 +102,6 @@ public class BluHollowEffect {
                     cancel();
                     return;
                 }
-
-                // aggiorna centro sfera in base alla view del giocatore
                 try {
                     Location eye = owner.getEyeLocation();
                     Vector look = eye.getDirection().normalize();
@@ -122,42 +110,31 @@ public class BluHollowEffect {
                     position.add(velocity);
                 }
 
-                // anima particelle interne (random swirl + ring)
                 spawnInternalParticles(tick);
 
-                // calcola il set di blocchi shell target per il centro corrente
                 Set<BlockKey> newShell = computeShellBlockKeys(position, radius);
 
-                // RESTORE dei blocchi che facevano parte della shell precedente ma non della nuova shell:
-                // se il blocco è stato salvato come "persistent" allora deve rimanere AIR (è stato distrutto),
-                // altrimenti ripristiniamo lo stato originale.
                 Set<BlockKey> toRemoveShell = new HashSet<>(currentShellBlocks);
                 toRemoveShell.removeAll(newShell);
                 for (BlockKey key : toRemoveShell) {
-                    // se il blocco è nella modifiedBlocks e persistent -> impostiamo AIR (distrutto)
                     BlockSnapshot snap = modifiedBlocks.get(key);
                     Location loc = key.toLocation();
                     if (loc == null) continue;
                     Block b = loc.getBlock();
                     if (snap != null && snap.persistent) {
-                        // Lasciamo AIR (distrutto)
                         try { b.setType(Material.AIR, false); } catch (Throwable ignored) {}
                     } else {
-                        // ripristina allo stato originale (se è stato salvato) oppure metti AIR se non salvato
                         if (snap != null) {
                             try {
                                 b.setType(snap.material, false);
                                 try { b.setBlockData(snap.data, false); } catch (Throwable ignored) {}
                             } catch (Throwable ignored) {}
-                            // se non persistent e già ripristinato, manteniamo snapshot per il restore finale (non necessario, ma ok)
                         } else {
-                            // se non avevamo snapshot (caso raro), lasciamo AIR
                             try { b.setType(Material.AIR, false); } catch (Throwable ignored) {}
                         }
                     }
                 }
 
-                // Applichiamo la nuova shell (salvando snapshots se necessario). Inoltre, distruggiamo i blocchi interni persistenti.
                 for (BlockKey key : newShell) {
                     Location loc = key.toLocation();
                     if (loc == null) continue;
@@ -165,27 +142,21 @@ public class BluHollowEffect {
                     Material orig = b.getType();
                     if (orig == Material.BEDROCK) continue;
 
-                    // salva snapshot se prima non esiste
+
                     if (!modifiedBlocks.containsKey(key)) {
                         try {
                             modifiedBlocks.put(key, new BlockSnapshot(orig, b.getBlockData().clone(), false));
                         } catch (Throwable ex) {
-                            // in casi rari clone() può fallare, salviamo dati base
                             modifiedBlocks.put(key, new BlockSnapshot(orig, b.getBlockData(), false));
                         }
                     }
 
-                    // imposta shell (vetro) sopra il blocco; se il blocco era stato precedentemente segnato persistent true,
-                    // lo sovrascriviamo visivamente con vetro (al leaving della shell tornerà ad AIR perché persistent)
                     try {
                         b.setType(shellMaterial, false);
                         try { b.setBlockData(shellMaterial.createBlockData(), false); } catch (Throwable ignored) {}
                     } catch (Throwable ignored) {}
                 }
 
-                // ORA: gestiamo i blocchi interni alla sfera (distruzione persistente).
-                // Per ogni blocco nel volume (non solo shell) salviamo snapshot se necessario e impostiamo AIR.
-                // Questo garantisce che la sfera "distrugga tutto quello che tocca".
                 Set<BlockKey> interior = computeInteriorBlockKeys(position, radius);
                 for (BlockKey key : interior) {
                     Location loc = key.toLocation();
@@ -194,7 +165,6 @@ public class BluHollowEffect {
                     Material orig = b.getType();
                     if (orig == Material.BEDROCK) continue;
 
-                    // se non salvato, salviamo con flag persistent=true
                     if (!modifiedBlocks.containsKey(key)) {
                         try {
                             modifiedBlocks.put(key, new BlockSnapshot(orig, b.getBlockData().clone(), true));
@@ -202,24 +172,18 @@ public class BluHollowEffect {
                             modifiedBlocks.put(key, new BlockSnapshot(orig, b.getBlockData(), true));
                         }
                     } else {
-                        // se esiste ma era snapshot non-persistent (per esempio la shell lo aveva salvato prima),
-                        // lo convertiamo in persistente solo se non era già persistente
                         BlockSnapshot existing = modifiedBlocks.get(key);
                         if (!existing.persistent) {
-                            // sostituiamo con persistent=true mantenendo il materiale/data originali
                             modifiedBlocks.put(key, new BlockSnapshot(existing.material, existing.data, true));
                         }
                     }
 
-                    // imposta AIR (distrugge il blocco)
                     try { b.setType(Material.AIR, false); } catch (Throwable ignored) {}
                 }
 
-                // Aggiorna current shell
                 currentShellBlocks.clear();
                 currentShellBlocks.addAll(newShell);
 
-                // Danno: infligge danno alle entità che stanno dentro la sfera (una volta per tick)
                 damageEntitiesInSphere(position, radius);
 
                 tick++;
@@ -228,7 +192,6 @@ public class BluHollowEffect {
     }
 
     private void spawnInternalParticles(int tick) {
-        // particelle animate all'interno della sfera: swirl + occasional flare
         int particlesPerTick = 20;
         for (int i = 0; i < particlesPerTick; i++) {
             double u = Math.random() * 2.0 - 1.0;
@@ -240,7 +203,6 @@ public class BluHollowEffect {
             Location p = position.clone().add(x, y, z);
             position.getWorld().spawnParticle(Particle.REDSTONE, p, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(90, 170, 255), 0.9f));
         }
-        // un anello rotante
         int ringPoints = 14;
         for (int i = 0; i < ringPoints; i++) {
             double ang = (tick * 0.12) + (i * (Math.PI * 2) / ringPoints);
@@ -249,7 +211,6 @@ public class BluHollowEffect {
             Location p = position.clone().add(rx, Math.sin(tick * 0.08) * 0.2, rz);
             position.getWorld().spawnParticle(Particle.SPELL, p, 1, 0.02, 0.02, 0.02, 0.01);
         }
-        // occasional flare
         if (tick % 10 == 0) {
             position.getWorld().spawnParticle(Particle.END_ROD, position.clone(), 8, radius*0.4, radius*0.4, radius*0.4, 0.01);
         }
@@ -284,7 +245,7 @@ public class BluHollowEffect {
         int cy = center.getBlockY();
         int cz = center.getBlockZ();
         double r2 = radius * radius;
-        double innerThreshold = Math.max(0.6, radius - 0.7); // sotto questa distanza consideriamo interno
+        double innerThreshold = Math.max(0.6, radius - 0.7);
         double inner2 = innerThreshold * innerThreshold;
         for (int x = -cr; x <= cr; x++) {
             for (int y = -cr; y <= cr; y++) {
@@ -309,7 +270,7 @@ public class BluHollowEffect {
         int cy = center.getBlockY();
         int cz = center.getBlockZ();
         double r2 = radius * radius;
-        double innerThreshold = Math.max(0.6, radius - 0.7); // consideriamo interno distanza < innerThreshold
+        double innerThreshold = Math.max(0.6, radius - 0.7);
         double inner2 = innerThreshold * innerThreshold;
         for (int x = -cr; x <= cr; x++) {
             for (int y = -cr; y <= cr; y++) {
@@ -327,9 +288,6 @@ public class BluHollowEffect {
         return out;
     }
 
-    /**
-     * Ripristina finalmente tutti i blocchi modificati al loro stato originale.
-     */
     private void restoreAllModifiedBlocks() {
         Map<BlockKey, BlockSnapshot> toRestore = new HashMap<>(modifiedBlocks);
         modifiedBlocks.clear();

@@ -10,10 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-/**
- * DashEffect migliorata: supporta carica (chargeRatio) che aumenta durata scia, intensità particelle ed esplosione finale.
- * colorazione: azzurrino + giallo.
- */
 public class DashEffect {
 
     private final double multiplier;
@@ -32,22 +28,18 @@ public class DashEffect {
     }
 
     public void start() {
-        // Calcola dir e velocità in base al multiplier e chargeRatio (più charge -> più forte)
         Vector dir = owner.getLocation().getDirection().normalize().multiply(multiplier * (1.0 + chargeRatio * 2.0));
-        dir.setY(0.18 + chargeRatio * 0.25); // più carica -> più altezza
+        dir.setY(0.18 + chargeRatio * 0.25);
         owner.setVelocity(dir);
 
-        // suono più pieno se caricato
         float pitch = (float) (1.0 + chargeRatio * 0.2);
         owner.getWorld().playSound(owner.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1f, pitch);
 
-        // particelle iniziali (esplosione) con colori azzurro / giallo
         Color lightBlue = Color.fromRGB(120, 200, 255);
         Color warmYellow = Color.fromRGB(255, 220, 80);
         DustOptions blue = new DustOptions(lightBlue, (float) (0.8 + chargeRatio * 1.2));
         DustOptions yellow = new DustOptions(warmYellow, (float) (0.6 + chargeRatio * 1.0));
 
-        // esplosione attorno al giocatore
         int blastCount = 10 + (int) (chargeRatio * 30);
         for (int i = 0; i < blastCount; i++) {
             double rx = (Math.random() - 0.5) * (1.5 + chargeRatio * 2.5);
@@ -57,7 +49,6 @@ public class DashEffect {
             owner.getWorld().spawnParticle(Particle.EXPLOSION_NORMAL, owner.getLocation().clone().add(rx*0.4, ry*0.4 + 0.6, rz*0.4), 1, 0.1, 0.1, 0.1, 0.02);
         }
 
-        // trail scia più lungo se caricato
         int trailTicks = trailTicksBase + (int) (chargeRatio * 24);
 
         new BukkitRunnable() {

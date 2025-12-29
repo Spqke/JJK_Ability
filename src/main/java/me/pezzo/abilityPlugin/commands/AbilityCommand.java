@@ -48,7 +48,6 @@ public record AbilityCommand(AbilityPlugin plugin) {
         ItemStack item = new ItemStack(data.getItem());
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // display name already stored in AbilityData (now sourced from lang.yml when available)
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', data.getName()));
             List<String> lore = new ArrayList<>();
             lore.add(ChatColor.translateAlternateColorCodes('&', data.getLore()));
@@ -71,13 +70,11 @@ public record AbilityCommand(AbilityPlugin plugin) {
 
             sender.sendMessage(langCfg.format("reload.started", null));
 
-            // ricarica lang PRIMA delle abilità così le abilità che usano nomi da lang verranno aggiornate
             LanguageConfig.ReloadResult langResult = langCfg.reload();
             ReloadResult abilityResult = cfg.reload();
 
             sender.sendMessage(langCfg.format("reload.completed", null));
 
-            // Mostra sommario combinato
             int totalChanges = abilityResult.added.size() + abilityResult.removed.size() + abilityResult.modified.size()
                     + langResult.added.size() + langResult.removed.size() + langResult.modified.size();
 
@@ -86,7 +83,6 @@ public record AbilityCommand(AbilityPlugin plugin) {
                 return;
             }
 
-            // Abilities: files changed
             if (!abilityResult.added.isEmpty()) {
                 sender.sendMessage(langCfg.format("reload.added", Map.of("files", String.join(", ", abilityResult.added))));
             }
@@ -106,7 +102,6 @@ public record AbilityCommand(AbilityPlugin plugin) {
                 }
             }
 
-            // Lang: keys changed
             if (!langResult.added.isEmpty()) {
                 sender.sendMessage("§aLang keys aggiunte: " + String.join(", ", langResult.added));
             }
