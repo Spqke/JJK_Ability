@@ -61,7 +61,7 @@ public class AbilityManager {
         }
 
         // Legge i messaggi di fase dal lang.yml (fallback ai valori hard-coded se mancanti)
-        String p0 = plugin.getLanguageConfig().getString("ability.blackhole.phase.0", org.bukkit.ChatColor.DARK_RED + "" + org.bukkit.ChatColor.BOLD + "Reversal");
+        String p0 = plugin.getLanguageConfig().getString("ability.blackhole.phase.0", org.bukkit.ChatColor.DARK_RED + "" + org.bukkit.ChatColor.BOLD + "Reversals");
         String p1 = plugin.getLanguageConfig().getString("ability.blackhole.phase.1", org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.BOLD + "Divergence");
         String p2 = plugin.getLanguageConfig().getString("ability.blackhole.phase.2", org.bukkit.ChatColor.RED + "" + org.bukkit.ChatColor.ITALIC + "" + org.bukkit.ChatColor.BOLD + "Positive Energy");
 
