@@ -1,0 +1,4 @@
+name: AbilityPlugin
+version: '1.0'
+main: me.pezzo.abilityPlugin.AbilityPlugin
+api-version: '1.20'
