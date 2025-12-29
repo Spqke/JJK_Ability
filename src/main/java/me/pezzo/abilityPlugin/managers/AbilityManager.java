@@ -158,7 +158,7 @@ public class AbilityManager {
             player.sendMessage(plugin.getLanguageConfig().format("ability.cooldown", java.util.Map.of("ability", "LeechField", "seconds", String.valueOf(seconds))));
             return;
         }
-        player.sendMessage(plugin.getLanguageConfig().getString("ability.used_leech", "&2Hai creato un Leech Field!"));
+        player.sendMessage(plugin.getLanguageConfig().getString("ability.used_leech", "&2Hai creato un Leechs Field!"));
         new LeechFieldEffect(player, leechData).start();
     }
 }
