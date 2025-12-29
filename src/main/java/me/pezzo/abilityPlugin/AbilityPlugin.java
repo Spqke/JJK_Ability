@@ -22,14 +22,11 @@ public final class AbilityPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        // carica lang prima per poterlo usare durante il resto dei caricamenti
         languageConfig = new LanguageConfig(this);
 
-        // Creare il config prima del manager
         abilityConfig = new AbilityConfig(this);
         abilityManager = new AbilityManager(this, abilityConfig);
 
-        // Charging manager (per Dash)
         chargingManager = new ChargingManager(this);
 
         registerCommands();
@@ -42,7 +39,6 @@ public final class AbilityPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // cancella eventuali task programmati da questo plugin per evitare task zombie
         getServer().getScheduler().cancelTasks(this);
 
         instance = null;
