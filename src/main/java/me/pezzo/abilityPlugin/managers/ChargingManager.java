@@ -123,16 +123,17 @@ public class ChargingManager {
                     st.missCount = 0;
                 }
 
-                // solo se il mismatch persiste per MISS_THRESHOLD tick consecutivi -> release
+                // solo se il mismatch persiste per MISS_THRESHOLD tick consecutivi -> CANCEL (abort)
                 if (st.missCount >= MISS_THRESHOLD) {
                     plugin.getLogger().info(String.format(
-                            "[Charging] stop for %s: consecutive misses=%d ticks=%d percent=%d",
+                            "[Charging] cancel for %s: consecutive misses=%d ticks=%d percent=%d",
                             player.getName(),
                             st.missCount,
                             ticks,
                             percent
                     ));
-                    releaseCharging(player);
+                    // annulliamo la charging (non rilasciamo il dash)
+                    cancelCharging(player);
                 }
             }
         };

@@ -4,6 +4,7 @@ import me.pezzo.abilityPlugin.commands.AbilityCommand;
 import me.pezzo.abilityPlugin.config.AbilityConfig;
 import me.pezzo.abilityPlugin.config.LanguageConfig;
 import me.pezzo.abilityPlugin.listener.AbilityListener;
+import me.pezzo.abilityPlugin.listener.ProtocolPacketListener;
 import me.pezzo.abilityPlugin.managers.AbilityManager;
 import me.pezzo.abilityPlugin.managers.ChargingManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -28,6 +29,17 @@ public final class AbilityPlugin extends JavaPlugin {
         abilityManager = new AbilityManager(this, abilityConfig);
 
         chargingManager = new ChargingManager(this);
+
+        if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
+            try {
+                new ProtocolPacketListener(this);
+                getLogger().info("ProtocolLib trovato: packet-based release attivato.");
+            } catch (Throwable t) {
+                getLogger().warning("Errore registrando ProtocolLib listener: " + t.getMessage());
+            }
+        } else {
+            getLogger().info("ProtocolLib non trovato: uso fallback basato su eventi.");
+        }
 
         registerCommands();
         registerListeners();

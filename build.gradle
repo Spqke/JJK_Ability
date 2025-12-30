@@ -22,10 +22,13 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
 
-    // Le librerie che vuoi includere nel plugin finale
+
+
     implementation 'com.github.Revxrsal.Lamp:common:3.3.6'
     implementation 'com.github.Revxrsal.Lamp:bukkit:3.3.6'
     implementation 'com.github.Revxrsal.Lamp:brigadier:3.3.6'
+
+    compileOnly 'net.dmulloy2:ProtocolLib:5.4.0'
 }
 
 // 2. Configurazione dello ShadowJar
